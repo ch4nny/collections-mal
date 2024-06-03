@@ -13,9 +13,9 @@ app.classes.api.mal = class {
             queryText = query.value;
         }
 
-        let url = "https://api.myanimelist.net/v2/manga?";
+        let url = "https://api.myanimelist.net/v2/manga";
         url += "api_key=" + this.api_key;
-        url += "&query=" + encodeURIComponent(queryText);
+        url += "?q=" + encodeURIComponent(queryText);
 
         let request = app.request(url);
         let response = request.send();
@@ -30,7 +30,7 @@ app.classes.api.mal = class {
                 let searchResult = app.searchResult.new();
             
                 searchResult.title = manga.title;
-                searchResult.subtitle = manga.authors{first_name,last_name};
+                searchResult.subtitle = manga.authors;
                 searchResult.imageURL = manga.main_picture;
             
                 searchResult.params = {
