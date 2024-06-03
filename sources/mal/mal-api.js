@@ -1,24 +1,21 @@
-// TMDB library (1.0)
+// MAL library (1.0)
 
-app.classes.api.tmdb = class {
+app.classes.api.mal = class {
     
     constructor() {
-        this.api_key = "";
-        this.language = "en-US";
-        this.movieClass = app.classes.api.tmdb.movie;
+        this.api_key = "X-MAL-CLIENT-ID";
+        this.mangaClass = app.classes.api.mal.manga;
     }
 
-    searchMovies(query) {
+    searchManga(query) {
         let queryText = "";
         if(query.isText()) {
             queryText = query.value;
         }
 
-        let url = "https://api.themoviedb.org/3/search/movie?";
+        let url = "https://api.myanimelist.net/v2/manga?";
         url += "api_key=" + this.api_key;
-        url += "&language=" + this.language;
         url += "&query=" + encodeURIComponent(queryText);
-        url += "&include_adult=false";
 
         let request = app.request(url);
         let response = request.send();
@@ -28,16 +25,16 @@ app.classes.api.tmdb = class {
 
         if(data?.results != undefined) {
             for(let result of data.results) {
-                let movie = new app.classes.api.tmdb.movieResult(result);
+                let manga = new app.classes.api.mal.mangaResult(result);
 
                 let searchResult = app.searchResult.new();
             
-                searchResult.title = movie.title;
-                searchResult.subtitle = movie.year;
-                searchResult.imageURL = movie.thumbnail;
+                searchResult.title = manga.title;
+                searchResult.subtitle = manga.authors{first_name,last_name};
+                searchResult.imageURL = manga.main_picture;
             
                 searchResult.params = {
-                    id: movie.id
+                    id: manga.id
                 };
                 
                 searchResults.push(searchResult);
@@ -47,10 +44,9 @@ app.classes.api.tmdb = class {
         return searchResults;
     }
 
-    getMovie(id) {
-        let url = "https://api.themoviedb.org/3/movie/" + id + "?";
+    getManga(id) {
+        let url = "https://api.myanimelist.net/v2/manga/" + id + "?";
         url += "api_key=" + this.api_key;
-        url += "&language=" + this.language;
 
         let request = app.request(url);
         let response = request.send();
@@ -58,7 +54,7 @@ app.classes.api.tmdb = class {
         if(response.statusCode == 200) {
             let data = response.json();
             if(data != undefined) {
-                return new this.movieClass(data);
+                return new this.mangaClass(data);
             }
         }
 
@@ -66,7 +62,7 @@ app.classes.api.tmdb = class {
     }
 }
 
-app.classes.api.tmdb.movieResult = class {
+app.classes.api.mal.mangaResult = class {
     constructor(data) {
         this.data = data;
     }
@@ -80,7 +76,7 @@ app.classes.api.tmdb.movieResult = class {
     }
 
     get releaseDate() {
-        let date = new Date(this.data.release_date);
+        let date = new Date(this.data.start_date);
         if(app.date.isValid(date)) {
             return date;
         }
@@ -96,15 +92,15 @@ app.classes.api.tmdb.movieResult = class {
     }
 
     get thumbnail() {
-        let poster_path = this.data.poster_path;
-        if(poster_path != undefined) {
-            return "https://image.tmdb.org/t/p/w500" + poster_path;
+        let main_picture = this.data.main_picture;
+        if(main_picture != undefined) {
+            return "https://myanimelist.cdn-dena.com/images/manga/1/" + id + ".jpg";
         }
         return undefined;
     }
 }
 
-app.classes.api.tmdb.movie = class {
+app.classes.api.mal.manga = class {
     constructor(data) {
         this.data = data;
     }
@@ -117,43 +113,25 @@ app.classes.api.tmdb.movie = class {
         return this.data.title;
     }
 
-    get overview() {
-        return this.data.overview;
+    get synopsis() {
+        return this.data.synopsis;
     }
 
     get releaseDate() {
-        let date = new Date(this.data.release_date);
+        let date = new Date(this.data.start_date);
         if(app.date.isValid(date)) {
             return date;
         }
         return undefined;
     }
 
-    get genres() {
-        let suggestions = [];
-        for(let genre of this.data.genres) {
-            let name = genre.name;
-            let suggestion = app.listItem.suggest(name, name);
-            suggestions.push(suggestion);
-        }
-        return suggestions;
-    }
-
-    posterURL(size = "original") {
-        let poster_path = this.data.poster_path;
-        if(poster_path != undefined) {
-            return "https://image.tmdb.org/t/p/" + size + poster_path;
-        }
-        return undefined;
-    }
-
-    requestPoster(size = "original") {
-        let url = this.posterURL(size);
-        if(url != undefined) {
-            return app.image.fromURL(url);
+    pictureURL(size = "medium") {
+        let main_picture = this.data.main_picture;
+        if(main_picture != undefined) {
+            return "https://myanimelist.cdn-dena.com/images/manga/1/" + id + ".jpg";
         }
         return undefined;
     }
 }
 
-app.api.tmdb = new app.classes.api.tmdb();
+app.api.mal = new app.classes.api.mal();
